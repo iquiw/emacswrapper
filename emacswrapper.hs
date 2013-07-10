@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 module Main where
 
-import Prelude hiding (catch)
 import Control.Applicative
 import Control.Exception
 import System.Directory
@@ -18,6 +18,9 @@ cmdEmacs = "emacs.exe"
 cmdRunemacs = "runemacs.exe"
 cmdEmacsclientw = "emacsclientw.exe"
 
+homeKey :: String
+homeKey = "HOME"
+
 main :: IO ()
 main = catch winMain showError
   where
@@ -26,12 +29,9 @@ main = catch winMain showError
 
 winMain :: IO ()
 winMain = do
-    args <- getArgsW
-    -- When emacs is invoked from cygwin, it searches init files in
-    -- "HOME" directory, which might be wrong.
-    -- So remove "HOME" environment variable.
-    envs <- filter ((/="HOME").fst) `fmap` getEnvironment
-    mdir <- isServerRunning
+    args  <- getArgsW
+    (_, envs) <- getHomeEnv
+    mdir  <- isServerRunning
     (_,_,_,ph) <- case mdir of
         Just dir -> createProcess $ emacscli (dir </> cmdEmacsclientw) args envs
         Nothing  -> do
@@ -53,6 +53,7 @@ cp exe args envs = CreateProcess
     , std_out = Inherit
     , std_err = Inherit
     , close_fds = True
+    , create_group = False
     }
 
 emacs :: FilePath -> [String] -> [(String, String)] -> CreateProcess
@@ -82,7 +83,7 @@ isServerRunning = do
 -- | Read PID from emacs' server file and returns it if exists.
 readPidFromServerFile :: IO (Maybe ProcessId)
 readPidFromServerFile = do
-    f <- getAppUserDataDirectory ".emacs.d\\server\\server"
+    f <- ((</> ".emacs.d\\server\\server") . fst) <$> getHomeEnv
     b <- doesFileExist f
     if b
         then readPid f
@@ -101,3 +102,12 @@ findRunemacs :: IO (Maybe FilePath)
 findRunemacs = liftA2 (<|>)
                       (findCommandByCurrentProcess cmdRunemacs)
                       (findCommandFromPATH cmdRunemacs)
+
+getHomeEnv :: IO (FilePath, [(String, String)])
+getHomeEnv = do
+    envs <- getEnvironment
+    case lookup homeKey envs of
+        Just path -> return (path, filter ((/= homeKey) . fst) envs)
+        Nothing   -> do
+            path <- getHomeDirectory
+            return (path, (homeKey, path) : envs)
