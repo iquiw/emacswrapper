@@ -21,6 +21,9 @@ cmdEmacsclientw = "emacsclientw.exe"
 homeKey :: String
 homeKey = "HOME"
 
+profileKey :: String
+profileKey = "USERPROFILE"
+
 main :: IO ()
 main = catch winMain showError
   where
@@ -106,8 +109,9 @@ findRunemacs = liftA2 (<|>)
 getHomeEnv :: IO (FilePath, [(String, String)])
 getHomeEnv = do
     envs <- getEnvironment
-    case lookup homeKey envs of
-        Just path -> return (path, filter ((/= homeKey) . fst) envs)
+    case lookup profileKey envs <|> lookup homeKey envs of
+        Just path ->
+            return (path, (homeKey, path) : filter ((/= homeKey) . fst) envs)
         Nothing   -> do
             path <- getHomeDirectory
             return (path, (homeKey, path) : envs)
