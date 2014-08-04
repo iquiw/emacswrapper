@@ -38,9 +38,7 @@ findCommandByCurrentProcess cmd = do
     let (dir, _) = splitFileName cp
         path = normalise $ dir </> cmd
     b <- doesFileExist path
-    if b
-        then return $ Just path
-        else return Nothing
+    return $ if b then Just path else Nothing
 
 -- | Find command from the current directory and PATH environment variable.
 findCommandFromPATH :: String -> IO (Maybe FilePath)

@@ -79,9 +79,7 @@ isServerRunning = do
         Just pid -> handle (\(_ :: SomeException) -> return Nothing) $ do
             path <- getProcessPath pid
             let (dir, exe) = splitFileName path
-            if exe == cmdEmacs
-                then return $ Just dir
-                else return Nothing
+            return $ if exe == cmdEmacs then Just dir else Nothing
 
 -- | Read PID from emacs' server file and returns it if exists.
 readPidFromServerFile :: IO (Maybe ProcessId)
