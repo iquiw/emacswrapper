@@ -1,5 +1,5 @@
 name:                emacswrapper
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            Wrapper program to run Emacs in server mode on Windows.
 description:         Emacswrapper is a wrapper program of Emacs on Windows.
                      It executes runemacs.exe in server mode if no Emacs is
@@ -18,10 +18,14 @@ cabal-version:       >=1.2
 
 executable emacswrapper
   main-is:             emacswrapper.hs
-  build-depends:       base >=4 && < 5, directory, filepath, process, Win32
   ghc-options:         -Wall
   -- The following usage ld-option might be wrong,
   -- but is there any other way to specify .res file?
   ld-options:          -mwindows emacswrapper.res
+  build-depends:       base >=4 && < 5,
+                       directory,
+                       filepath,
+                       process >= 1.2,
+                       Win32
   extra-libraries:     psapi
   other-modules:       Win32Utils

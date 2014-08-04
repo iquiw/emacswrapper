@@ -57,6 +57,7 @@ cp exe args envs = CreateProcess
     , std_err = Inherit
     , close_fds = True
     , create_group = False
+    , delegate_ctlc = False
     }
 
 emacs :: FilePath -> [String] -> [(String, String)] -> CreateProcess
