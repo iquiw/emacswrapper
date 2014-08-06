@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Win32Utils
     ( findCommandByCurrentProcess
@@ -86,10 +87,10 @@ getProcessPath pid = do
             then getLastError >>= failWith "GetModuleFileNameExW"
             else peekCWStringLen (ws, fromIntegral size)
 
-foreign import stdcall "GetCommandLineW" c_GetCommandLineW :: IO CWString
+foreign import CALLCONV "GetCommandLineW" c_GetCommandLineW :: IO CWString
 
-foreign import stdcall "CommandLineToArgvW" c_CommandLineToArgvW
+foreign import CALLCONV "CommandLineToArgvW" c_CommandLineToArgvW
     :: CWString -> Ptr Int -> IO (Ptr CWString)
 
-foreign import stdcall "GetModuleFileNameExW" c_GetModuleFileNameExW
+foreign import CALLCONV "GetModuleFileNameExW" c_GetModuleFileNameExW
     :: HANDLE -> HANDLE -> CWString -> DWORD -> IO DWORD
