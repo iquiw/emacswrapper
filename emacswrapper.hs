@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 module Main where
@@ -9,14 +10,13 @@ import System.Environment
 import System.FilePath
 import System.Exit
 import System.Process
+
+#if WINDOWS
 import System.Win32.Process (ProcessId)
-
 import Win32Utils
-
-cmdEmacs, cmdRunemacs, cmdEmacsclientw :: String
-cmdEmacs = "emacs.exe"
-cmdRunemacs = "runemacs.exe"
-cmdEmacsclientw = "emacsclientw.exe"
+#else
+import UnixUtils
+#endif
 
 homeKey :: String
 homeKey = "HOME"
@@ -36,7 +36,7 @@ winMain = do
     (_, envs) <- getHomeEnv
     mdir  <- isServerRunning
     (_,_,_,ph) <- case mdir of
-        Just dir -> createProcess $ emacscli (dir </> cmdEmacsclientw) args envs
+        Just dir -> createProcess $ emacscli (dir </> cmdEmacsclient) args envs
         Nothing  -> do
             mcmd <- findRunemacs
             case mcmd of
@@ -67,37 +67,6 @@ emacscli :: FilePath -> [String] -> [(String, String)] -> CreateProcess
 emacscli cmd args = cp cmd ("-n" : if null args
                                    then ["-e", "(raise-frame)"]
                                    else args)
-
--- | Check emacs server is running or not.
--- If it is running, return the directory of the executable.
--- Nothing otherwise.
-isServerRunning :: IO (Maybe FilePath)
-isServerRunning = do
-    mpid <- readPidFromServerFile
-    case mpid of
-        Nothing  -> return Nothing
-        -- handles process not found case.
-        Just pid -> handle (\(_ :: SomeException) -> return Nothing) $ do
-            path <- getProcessPath pid
-            let (dir, exe) = splitFileName path
-            return $ if exe == cmdEmacs then Just dir else Nothing
-
--- | Read PID from emacs' server file and returns it if exists.
-readPidFromServerFile :: IO (Maybe ProcessId)
-readPidFromServerFile = do
-    f <- ((</> ".emacs.d\\server\\server") . fst) <$> getHomeEnv
-    b <- doesFileExist f
-    if b
-        then readPid f
-        else return Nothing
-  where
-    readPid f = do
-        s <- readFile f
-        case words s of
-            (_:w:_) -> case reads w of
-                [(pid, "")] -> return $ Just pid
-                _           -> return Nothing
-            _       -> return Nothing
 
 -- | Find full path of runemacs.exe.
 findRunemacs :: IO (Maybe FilePath)

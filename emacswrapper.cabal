@@ -1,5 +1,5 @@
 name:                emacswrapper
-version:             0.2.0.0
+version:             0.3.0.0
 synopsis:            Wrapper program to run Emacs in server mode on Windows.
 description:         Emacswrapper is a wrapper program of Emacs on Windows.
                      It executes runemacs.exe in server mode if no Emacs is
@@ -15,19 +15,23 @@ extra-source-files:  README.rst, emacswrapper.rc,
                      images/emacs.ico, images/emacswrapper.ico
 cabal-version:       >=1.2
 
-executable emacswrapper
+executable ew
   main-is:             emacswrapper.hs
   build-depends:       base >=4 && < 5,
                        directory,
                        filepath,
-                       process >= 1.2,
-                       Win32
-  ghc-options:         -Wall -optl dist/emacswrapper.res
-  if arch(X86_64)
-    cpp-options:       -DCALLCONV=ccall
+                       process >= 1.2
+  if os(windows)
+    build-depends:     Win32
+    ghc-options:       -Wall -optl dist/emacswrapper.res
+    if arch(X86_64)
+      cpp-options:     -DWINDOWS -DCALLCONV=ccall
+    else
+      cpp-options:     -DWINDOWS -DCALLCONV=stdcall
+    ld-options:        -mwindows
+    build-tools:       windres
+    extra-libraries:   psapi
+    other-modules:     Win32Utils
   else
-    cpp-options:       -DCALLCONV=stdcall
-  ld-options:          -mwindows
-  build-tools:         windres
-  extra-libraries:     psapi
-  other-modules:       Win32Utils
+    build-depends:     unix
+    other-modules:     UnixUtils

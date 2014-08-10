@@ -1,15 +1,19 @@
 import Distribution.PackageDescription (emptyHookedBuildInfo)
 import Distribution.Simple ( UserHooks(..)
+                           , defaultMain
                            , defaultMainWithHooks
                            , simpleUserHooks )
 import Distribution.Simple.Program (requireProgram, simpleProgram)
 import Distribution.Simple.Program.Db (defaultProgramDb)
 import Distribution.Simple.Setup (buildVerbosity, fromFlag)
 import Distribution.Simple.Utils (rawSystemExit)
-import Distribution.System (Arch(..), buildArch)
+import Distribution.System (Arch(..), OS(..), buildArch, buildOS)
 
 main ::  IO ()
-main = defaultMainWithHooks $ simpleUserHooks
+main = if buildOS == Windows then winMain else defaultMain
+
+winMain :: IO ()
+winMain = defaultMainWithHooks $ simpleUserHooks
     { hookedPrograms = [windres]
     , preBuild = createRes
     }

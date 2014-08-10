@@ -1,10 +1,11 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Win32Utils
-    ( findCommandByCurrentProcess
+    ( cmdRunemacs
+    , cmdEmacsclient
+    , findCommandByCurrentProcess
     , findCommandFromPATH
+    , isServerRunning
     , getArgsW
-    , getProcessPath
     , showMessage
     ) where
 
@@ -24,6 +25,12 @@ import System.Win32.Process (ProcessId, openProcess,
 -- | character size of max path in unicode API
 uMaxPath :: DWORD
 uMaxPath = 32767
+
+cmdEmacs, cmdRunemacs, cmdEmacsclient :: String
+cmdEmacs = "emacs.exe"
+cmdRunemacs = "runemacs.exe"
+cmdEmacsclient = "emacsclientw.exe"
+
 
 -- | Display message dialog with the specified string.
 showMessage :: String -> IO ()
@@ -86,6 +93,37 @@ getProcessPath pid = do
         if size == 0
             then getLastError >>= failWith "GetModuleFileNameExW"
             else peekCWStringLen (ws, fromIntegral size)
+
+-- | Check emacs server is running or not.
+-- If it is running, return the directory of the executable.
+-- Nothing otherwise.
+isServerRunning :: IO (Maybe FilePath)
+isServerRunning = do
+    mpid <- readPidFromServerFile
+    case mpid of
+        Nothing  -> return Nothing
+        -- handles process not found case.
+        Just pid -> handle (\(_ :: SomeException) -> return Nothing) $ do
+            path <- getProcessPath pid
+            let (dir, exe) = splitFileName path
+            return $ if exe == cmdEmacs then Just dir else Nothing
+
+-- | Read PID from emacs' server file and returns it if exists.
+readPidFromServerFile :: IO (Maybe ProcessId)
+readPidFromServerFile = do
+    f <- ((</> ".emacs.d\\server\\server") . fst) <$> getHomeEnv
+    b <- doesFileExist f
+    if b
+        then readPid f
+        else return Nothing
+  where
+    readPid f = do
+        s <- readFile f
+        case words s of
+            (_:w:_) -> case reads w of
+                [(pid, "")] -> return $ Just pid
+                _           -> return Nothing
+            _       -> return Nothing
 
 foreign import CALLCONV "GetCommandLineW" c_GetCommandLineW :: IO CWString
 
