@@ -1,28 +1,17 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections #-}
 module Main where
 
 import Control.Applicative
 import Control.Exception
-import System.Directory
-import System.Environment
 import System.FilePath
 import System.Exit
 import System.Process
 
 #if WINDOWS
-import System.Win32.Process (ProcessId)
 import Win32Utils
 #else
 import UnixUtils
 #endif
-
-homeKey :: String
-homeKey = "HOME"
-
-profileKey :: String
-profileKey = "USERPROFILE"
 
 main :: IO ()
 main = catch winMain showError
@@ -35,7 +24,7 @@ winMain = do
     args  <- getArgsW
     (_, envs) <- getHomeEnv
     mdir  <- isServerRunning
-    (_,_,_,ph) <- case mdir of
+    (_, _, _, ph) <- case mdir of
         Just dir -> createProcess $ emacscli (dir </> cmdEmacsclient) args envs
         Nothing  -> do
             mcmd <- findRunemacs
@@ -73,13 +62,3 @@ findRunemacs :: IO (Maybe FilePath)
 findRunemacs = liftA2 (<|>)
                       (findCommandByCurrentProcess cmdRunemacs)
                       (findCommandFromPATH cmdRunemacs)
-
-getHomeEnv :: IO (FilePath, [(String, String)])
-getHomeEnv = do
-    envs <- getEnvironment
-    case lookup profileKey envs <|> lookup homeKey envs of
-        Just path ->
-            return (path, (homeKey, path) : filter ((/= homeKey) . fst) envs)
-        Nothing   -> do
-            path <- getHomeDirectory
-            return (path, (homeKey, path) : envs)

@@ -5,6 +5,7 @@ module UnixUtils
     , findCommandFromPATH
     , isServerRunning
     , getArgsW
+    , getHomeEnv
     , showMessage
     ) where
 
@@ -37,8 +38,13 @@ findCommandByCurrentProcess cmd = do
 findCommandFromPATH :: String -> IO (Maybe FilePath)
 findCommandFromPATH = findExecutable
 
+-- | Get command line arguments.
 getArgsW :: IO [String]
 getArgsW = getArgs
+
+-- | Get HOME path and modified environment variables.
+getHomeEnv :: IO (FilePath, [(String, String)])
+getHomeEnv = (,) <$> getHomeDirectory <*> getEnvironment
 
 -- | Check emacs server is running or not.
 -- If it is running, return the directory of the executable.

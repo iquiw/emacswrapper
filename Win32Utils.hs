@@ -1,4 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Win32Utils
     ( cmdRunemacs
     , cmdEmacsclient
@@ -6,21 +8,27 @@ module Win32Utils
     , findCommandFromPATH
     , isServerRunning
     , getArgsW
+    , getHomeEnv
     , showMessage
     ) where
 
-import Control.Exception (SomeException, try)
+import Control.Applicative
+import Control.Exception (SomeException, handle, try)
 import Data.Bits ((.|.))
 import Foreign (Ptr, alloca, allocaArray, nullPtr, peek, peekArray)
 import Foreign.C (CWString, peekCWString, peekCWStringLen)
 import Graphics.Win32 (messageBox, mB_OK)
-import System.Directory (doesFileExist, getCurrentDirectory)
-import System.Environment (getEnv, getProgName)
+import System.Directory (doesFileExist, getCurrentDirectory, getHomeDirectory)
+import System.Environment (getEnv, getEnvironment, getProgName)
 import System.FilePath ((</>), normalise, splitFileName)
-import System.Win32 (DWORD, HANDLE, failWith, getLastError, getModuleFileName,
-                     localFree, nullHANDLE)
+import System.Win32 (DWORD, HANDLE,
+                     failWith, getLastError, getModuleFileName, nullHANDLE)
 import System.Win32.Process (ProcessId, openProcess,
                              pROCESS_QUERY_INFORMATION, pROCESS_VM_READ)
+
+homeKey, profileKey :: String
+homeKey = "HOME"
+profileKey = "USERPROFILE"
 
 -- | character size of max path in unicode API
 uMaxPath :: DWORD
@@ -80,9 +88,18 @@ getArgsW = do
             then return []
             else do
                 cwss <- peekArray n cwsp
-                mapM peekNfree  $ tail cwss
-  where
-    peekNfree x = peekCWString x >>= \y -> localFree x >> return y
+                mapM peekCWString $ tail cwss
+
+-- | Get HOME path and modified environment variables.
+getHomeEnv :: IO (FilePath, [(String, String)])
+getHomeEnv = do
+    envs <- getEnvironment
+    case lookup profileKey envs <|> lookup homeKey envs of
+        Just path ->
+            return (path, (homeKey, path) : filter ((/= homeKey) . fst) envs)
+        Nothing   -> do
+            path <- getHomeDirectory
+            return (path, (homeKey, path) : envs)
 
 -- | Return the executable path of the specified PID.
 getProcessPath :: ProcessId -> IO FilePath
