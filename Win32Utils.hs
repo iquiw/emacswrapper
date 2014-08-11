@@ -21,8 +21,8 @@ import Graphics.Win32 (messageBox, mB_OK)
 import System.Directory (doesFileExist, getCurrentDirectory, getHomeDirectory)
 import System.Environment (getEnv, getEnvironment, getProgName)
 import System.FilePath ((</>), normalise, splitFileName)
-import System.Win32 (DWORD, HANDLE,
-                     failWith, getLastError, getModuleFileName, nullHANDLE)
+import System.Win32 (DWORD, HANDLE, failWith, getLastError, getModuleFileName,
+                     localFree, nullHANDLE)
 import System.Win32.Process (ProcessId, openProcess,
                              pROCESS_QUERY_INFORMATION, pROCESS_VM_READ)
 
@@ -88,7 +88,9 @@ getArgsW = do
             then return []
             else do
                 cwss <- peekArray n cwsp
-                mapM peekCWString $ tail cwss
+                args <- mapM peekCWString $ tail cwss
+                _ <- localFree cwsp
+                return args
 
 -- | Get HOME path and modified environment variables.
 getHomeEnv :: IO (FilePath, [(String, String)])
