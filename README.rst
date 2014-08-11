@@ -29,11 +29,3 @@ Setup
 
    (a) Put ew.exe under Emacs bin directory.
    (b) Add Emacs bin directory to PATH environment variable.
-
-
-TODO
-----
-1. Conversion from short name to long name.
-2. Support cygwin path.
-3. Better error handling. (failure, attempt?)
-4. Original icon?
