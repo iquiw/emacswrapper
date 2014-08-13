@@ -11,7 +11,8 @@ module UnixUtils
 
 import Control.Applicative
 import System.Directory
-import System.Environment (getArgs, getExecutablePath, getProgName)
+import System.Environment ( getArgs, getEnvironment, getExecutablePath,
+                            getProgName )
 import System.FilePath
 import System.IO (hPutStrLn, stderr)
 import System.Posix.User
