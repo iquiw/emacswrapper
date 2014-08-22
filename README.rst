@@ -11,7 +11,6 @@ Otherwise, it executes emacsclient and raise the frame of running Emacs.
 
 There is no reason the program is written in Haskell except that
 I like Haskell.
-You might find something useful in Win32Utils.hs.
 
 It does not support Cygwin Emacs.
 
