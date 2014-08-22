@@ -2,29 +2,31 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Win32
-    ( cmdRunemacs
-    , cmdEmacsclient
-    , findCommandByCurrentProcess
-    , findCommandFromPATH
+    ( findCommandByCurrentProcess
+    , getEmacsEnv
     , isServerRunning
-    , getArgsW
-    , getHomeEnv
+    , runEmacs
     , showMessage
     ) where
 
 import Control.Applicative
-import Control.Exception (SomeException, handle, try)
+import Control.Monad (unless)
+import Control.Exception (SomeException, handle)
 import Data.Bits ((.|.))
 import Foreign (Ptr, alloca, allocaArray, nullPtr, peek, peekArray)
 import Foreign.C (CWString, peekCWString, peekCWStringLen)
 import Graphics.Win32 (messageBox, mB_OK)
-import System.Directory (doesFileExist, getCurrentDirectory, getHomeDirectory)
-import System.Environment (getEnv, getEnvironment, getProgName)
+import System.Directory (doesFileExist, getHomeDirectory)
+import System.Environment (getEnvironment, getProgName)
+import System.Exit (ExitCode(..), exitWith)
 import System.FilePath ((</>), normalise, splitFileName)
+import System.Process (createProcess, waitForProcess)
 import System.Win32 (DWORD, HANDLE, failWith, getLastError, getModuleFileName,
                      localFree, nullHANDLE)
 import System.Win32.Process (ProcessId, openProcess,
                              pROCESS_QUERY_INFORMATION, pROCESS_VM_READ)
+
+import Common
 
 homeKey, profileKey :: String
 homeKey = "HOME"
@@ -39,11 +41,21 @@ cmdEmacs = "emacs.exe"
 cmdRunemacs = "runemacs.exe"
 cmdEmacsclient = "emacsclientw.exe"
 
--- | Run emacs command
-runEmacs :: FilePath -> [String] -> [(String, String)] -> IO ()
-runEmacs cmd args envs = do
-    (_, _, _, ph) <- createProcess $ emacs cmd args envs
-    waitForProcess ph >>= exitWith
+-- | Get platform dependent Emacs environment settings.
+getEmacsEnv :: IO EmacsEnv
+getEmacsEnv = do
+    (home, envs) <- getHomeEnv
+    EmacsEnv home envs
+        <$> getArgsW
+        <*> pure cmdRunemacs
+        <*> pure cmdEmacsclient
+
+-- | Run emacs server on the specified Emacs environment.
+runEmacs :: EmacsEnv -> FilePath -> IO ()
+runEmacs ee cmd = do
+    (_, _, _, ph) <- createProcess $ emacs cmd (eeArgs ee) (eeEnvs ee)
+    ec <- waitForProcess ph
+    unless (ec == ExitSuccess) $ exitWith ec
 
 -- | Display message dialog with the specified string.
 showMessage :: String -> IO ()

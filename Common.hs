@@ -1,4 +1,8 @@
-module Common where
+module Common
+    ( EmacsEnv(..)
+    , emacs
+    , runEmacscli
+    ) where
 
 import Control.Monad (unless)
 import System.Exit (ExitCode(..), exitWith)

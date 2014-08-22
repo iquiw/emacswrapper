@@ -27,7 +27,7 @@ winMain = do
         Nothing  -> do
             mcmd <- findRunemacs ee
             case mcmd of
-                Nothing  -> error $ "Could not find " ++ (eeRunemacs ee)
+                Nothing  -> error $ "Could not find " ++ eeRunemacs ee
                 Just cmd -> runEmacs ee cmd
 
 -- | Find full path of runemacs.exe.
