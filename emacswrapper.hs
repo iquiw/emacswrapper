@@ -1,13 +1,9 @@
 {-# LANGUAGE CPP #-}
 module Main where
 
-import Control.Applicative
-import Control.Exception
-import Control.Monad (unless)
-import System.Directory
-import System.Exit
-import System.FilePath
-import System.Process
+import Control.Applicative ((<|>), liftA2)
+import Control.Exception (SomeException, catch)
+import System.Directory (findExecutable)
 
 import Common
 #if WINDOWS
@@ -24,23 +20,18 @@ main = catch winMain showError
 
 winMain :: IO ()
 winMain = do
-    args  <- getArgsW
-    (_, envs) <- getHomeEnv
+    ee <- getEmacsEnv
     mdir  <- isServerRunning
     case mdir of
-        Just dir -> do
-            (_, _, _, ph) <- createProcess $
-                             emacscli (dir </> cmdEmacsclient) args envs
-            ec <- waitForProcess ph
-            unless (ec == ExitSuccess) $ exitWith ec
+        Just dir -> runEmacscli ee dir
         Nothing  -> do
-            mcmd <- findRunemacs
+            mcmd <- findRunemacs ee
             case mcmd of
-                Nothing  -> error $ "Could not find " ++ cmdRunemacs
-                Just cmd -> runEmacs cmd args envs
+                Nothing  -> error $ "Could not find " ++ (eeRunemacs ee)
+                Just cmd -> runEmacs ee cmd
 
 -- | Find full path of runemacs.exe.
-findRunemacs :: IO (Maybe FilePath)
-findRunemacs = liftA2 (<|>)
-                      (findCommandByCurrentProcess cmdRunemacs)
-                      (findExecutable cmdRunemacs)
+findRunemacs :: EmacsEnv -> IO (Maybe FilePath)
+findRunemacs ee = liftA2 (<|>)
+                      (findCommandByCurrentProcess (eeRunemacs ee))
+                      (findExecutable (eeRunemacs ee))

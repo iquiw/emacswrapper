@@ -1,10 +1,7 @@
 module Unix
-    ( cmdRunemacs
-    , cmdEmacsclient
-    , findCommandByCurrentProcess
+    ( findCommandByCurrentProcess
+    , getEmacsEnv
     , isServerRunning
-    , getArgsW
-    , getHomeEnv
     , runEmacs
     , showMessage
     ) where
@@ -25,11 +22,21 @@ cmdRunemacs, cmdEmacsclient :: String
 cmdRunemacs = "emacs"
 cmdEmacsclient = "emacsclient"
 
-runEmacs :: FilePath -> [String] -> [(String, String)] -> IO ()
-runEmacs cmd args envs = do
+-- | Get platform dependent Emacs environment settings.
+getEmacsEnv :: IO EmacsEnv
+getEmacsEnv = EmacsEnv
+              <$> getHomeDirectory
+              <*> getEnvironment
+              <*> getArgs
+              <*> pure cmdRunemacs
+              <*> pure cmdEmacsclient
+
+-- | Run emacs server on the specified Emacs environment.
+runEmacs :: EmacsEnv -> FilePath -> IO ()
+runEmacs ee cmd = do
     _ <- forkProcess $ do
         _ <- createSession
-        _ <- createProcess $ emacs cmd args envs
+        _ <- createProcess $ emacs cmd (eeArgs ee) (eeEnvs ee)
         return ()
     return ()
 
@@ -46,14 +53,6 @@ findCommandByCurrentProcess cmd = do
     let path = dir </> cmd
     b <- doesFileExist path
     return $ if b then Just path else Nothing
-
--- | Get command line arguments.
-getArgsW :: IO [String]
-getArgsW = getArgs
-
--- | Get HOME path and modified environment variables.
-getHomeEnv :: IO (FilePath, [(String, String)])
-getHomeEnv = (,) <$> getHomeDirectory <*> getEnvironment
 
 -- | Check emacs server is running or not.
 -- If it is running, return the directory of the executable.
