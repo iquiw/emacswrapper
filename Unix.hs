@@ -1,4 +1,4 @@
-module UnixUtils
+module Unix
     ( cmdRunemacs
     , cmdEmacsclient
     , findCommandByCurrentProcess

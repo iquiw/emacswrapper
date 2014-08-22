@@ -31,7 +31,7 @@ executable ew
     ld-options:        -mwindows
     build-tools:       windres
     extra-libraries:   psapi
-    other-modules:     Win32Utils
+    other-modules:     Win32
   else
     build-depends:     unix
-    other-modules:     UnixUtils
+    other-modules:     Unix

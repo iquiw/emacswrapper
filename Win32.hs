@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module Win32Utils
+module Win32
     ( cmdRunemacs
     , cmdEmacsclient
     , findCommandByCurrentProcess

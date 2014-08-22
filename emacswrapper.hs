@@ -8,9 +8,9 @@ import System.Exit
 import System.Process
 
 #if WINDOWS
-import Win32Utils
+import Win32
 #else
-import UnixUtils
+import Unix
 #endif
 
 main :: IO ()
