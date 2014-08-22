@@ -23,7 +23,7 @@ executable ew
                        process >= 1.2
   if os(windows)
     build-depends:     Win32
-    ghc-options:       -Wall -optl dist/emacswrapper.res
+    ghc-options:       -Wall -O2 -optl dist/emacswrapper.res
     if arch(X86_64)
       cpp-options:     -DWINDOWS -DCALLCONV=ccall
     else
@@ -31,7 +31,8 @@ executable ew
     ld-options:        -mwindows
     build-tools:       windres
     extra-libraries:   psapi
-    other-modules:     Win32
+    other-modules:     Common Win32
   else
+    ghc-options:       -Wall -O2
     build-depends:     unix
-    other-modules:     Unix
+    other-modules:     Common Unix

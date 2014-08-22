@@ -2,24 +2,36 @@ module Unix
     ( cmdRunemacs
     , cmdEmacsclient
     , findCommandByCurrentProcess
-    , findCommandFromPATH
     , isServerRunning
     , getArgsW
     , getHomeEnv
+    , runEmacs
     , showMessage
     ) where
 
 import Control.Applicative
 import System.Directory
-import System.Environment ( getArgs, getEnvironment, getExecutablePath,
-                            getProgName )
+import System.Environment (getArgs, getEnvironment, getExecutablePath,
+                           getProgName)
 import System.FilePath
 import System.IO (hPutStrLn, stderr)
-import System.Posix.User
+import System.Posix.Process (createSession, forkProcess)
+import System.Posix.User (getRealUserID)
+import System.Process (createProcess)
+
+import Common
 
 cmdRunemacs, cmdEmacsclient :: String
 cmdRunemacs = "emacs"
 cmdEmacsclient = "emacsclient"
+
+runEmacs :: FilePath -> [String] -> [(String, String)] -> IO ()
+runEmacs cmd args envs = do
+    _ <- forkProcess $ do
+        _ <- createSession
+        _ <- createProcess $ emacs cmd args envs
+        return ()
+    return ()
 
 -- | Display message dialog with the specified string.
 showMessage :: String -> IO ()
@@ -34,10 +46,6 @@ findCommandByCurrentProcess cmd = do
     let path = dir </> cmd
     b <- doesFileExist path
     return $ if b then Just path else Nothing
-
--- | Find command from PATH environment variable.
-findCommandFromPATH :: String -> IO (Maybe FilePath)
-findCommandFromPATH = findExecutable
 
 -- | Get command line arguments.
 getArgsW :: IO [String]
@@ -55,5 +63,5 @@ isServerRunning = do
     uid <- getRealUserID
     b <- doesFileExist $ "/tmp/emacs" ++ show uid </> "server"
     if b
-        then (takeDirectory <$>) <$> findCommandFromPATH cmdRunemacs
+        then (takeDirectory <$>) <$> findExecutable cmdRunemacs
         else return Nothing
