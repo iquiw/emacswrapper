@@ -1,10 +1,10 @@
 name:                emacswrapper
 version:             0.3.1.0
-synopsis:            Wrapper program to run Emacs in server mode on Windows.
-description:         Emacswrapper is a wrapper program of Emacs on Windows.
-                     It executes runemacs.exe in server mode if no Emacs is
-                     running in server mode.
-                     It runs emacsclientw.exe otherwise.
+synopsis:            Wrapper program to timely run emacs or emacsclient
+description:         Emacswrapper is a wrapper program of Emacs.
+                     It executes emacs in server mode if no Emacs is running
+                     in server mode.
+                     Otherwise, it runs emacsclient.
 license:             OtherLicense
 license-file:        LICENSE
 author:              Iku Iwasa

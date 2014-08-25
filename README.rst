@@ -26,5 +26,5 @@ Setup
 
 3. There are 2 options for emacswrapper to find Emacs executables.
 
-   (a) Put ew.exe under Emacs bin directory.
+   (a) Put ew(.exe) under Emacs bin directory.
    (b) Add Emacs bin directory to PATH environment variable.
