@@ -5,7 +5,7 @@ description:         Emacswrapper is a wrapper program of Emacs.
                      It executes emacs in server mode if no Emacs is running
                      in server mode.
                      Otherwise, it runs emacsclient.
-license:             OtherLicense
+license:             MIT
 license-file:        LICENSE
 author:              Iku Iwasa
 maintainer:          iku.iwasa@gmail.com
