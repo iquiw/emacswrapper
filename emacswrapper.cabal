@@ -1,5 +1,5 @@
 name:                emacswrapper
-version:             0.3.1.0
+version:             0.3.1.1
 synopsis:            Wrapper program to timely run emacs or emacsclient
 description:         Emacswrapper is a wrapper program of Emacs.
                      It executes emacs in server mode if no Emacs is running

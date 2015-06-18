@@ -55,12 +55,12 @@ findCommandByCurrentProcess cmd = do
     return $ if b then Just path else Nothing
 
 -- | Check emacs server is running or not.
--- If it is running, return the directory of the executable.
+-- If it is running, return the directory of the emacsclient executable.
 -- Nothing otherwise.
 isServerRunning :: IO (Maybe FilePath)
 isServerRunning = do
     uid <- getRealUserID
     b <- doesFileExist $ "/tmp/emacs" ++ show uid </> "server"
     if b
-        then (takeDirectory <$>) <$> findExecutable cmdRunemacs
+        then (takeDirectory <$>) <$> findExecutable cmdEmacsclient
         else return Nothing
